@@ -1,42 +1,18 @@
-# Ciphering CLI Tool
+# Testing
 
-## Installation
+Tests for Ciphering machine CLI from 1st task.  
+[Jest](https://jestjs.io/) framework used for tests.  
 
-- Clone this repository to your computer by runnig:  
-`git clone -b task1-ciphering-cli-tool https://github.com/eugenemp/eugenemp-NODEJS2021Q4.git`  
+## Scenarios
 
-Notice the 'b' switch! You cloning specific branch so no need to switch it after install
+### Error scenarios
+1) Input: User passes the same cli argument twice; Result: Error message is shown;
+e.g. input: `node my_caesar_cli -c C1-C1-A-R0 -c C0` result: `Error: You provided -c argument more than once`;
+2) Input: User doesn't pass -c or --config argument; Result: Error message is shown;
+3) Input: User passes -i argument with path that doesn't exist or with no read access; Result: Error message is shown;
+4) Input: User passes -o argument with path to directory that doesn't exist or with no read access; Result: Error message is shown;
+5) Input: User passes incorrent symbols in argument for --config; Result: Error message is shown;
 
-## Usage
-- CD into task1-ciphering-cli-tool folder and run my_ciphering_cli with argument listed below  
-
-- CLI tool accept 3 options (short alias and full name):  
-
-    -c, --config: config for ciphers Config is a string with pattern {XY(-)}n, where:  
-
-    X is a cipher mark:  
-        C is for Caesar cipher (with shift 1)  
-        A is for Atbash cipher  
-        R is for ROT-8 cipher  
-    Y is flag of encoding or decoding (mandatory for Caesar cipher and ROT-8 cipher and should not be passed Atbash cipher)  
-        1 is for encoding  
-        0 is for decoding  
-
-    -i, --input: a path to input file  
-    -o, --output: a path to output file  
-
-For example, config "C1-C1-R0-A" means "encode by Caesar cipher => encode by Caesar cipher => decode by ROT-8 => use Atbash"  
-
-- Usage example:  
-
-`$ node cipher-tool -c "C1-C1-R0-A" -i "./input.txt" -o "./output.txt"`  
-
-    input.txt `This is secret. Message about "_" symbol!`
-
-    output.txt `Myxn xn nbdobm. Tbnnfzb ferlm "_" nhteru!`
-
-`$ node cipher-tool -c "C1-R1-A" -i "./input.txt" -o "./output.txt"`  
-
-    input.txt `This is SPARTA!`
-
-    output.txt `Xjiy iy YBQZXQ!`
+### Success scenarios
+1) Input: User passes correct sequence of symbols as argument for --config that matches regular expression; Result: test passed
+2) Take cipher usage scenarios from [first task description](https://github.com/AlreadyBored/basic-nodejs-course/blob/review-2021Q4/descriptions/caesar-cipher-cli-tool.md) usage examples.
