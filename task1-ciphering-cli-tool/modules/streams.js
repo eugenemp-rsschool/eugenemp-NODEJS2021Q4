@@ -27,7 +27,7 @@ const getWriteable = (file) => {
     checkFileExist(file, 0);
     checkFileWrite(file);
 
-    writeable = fs.createWriteStream(file);
+    writeable = fs.createWriteStream(file, {flags:'a'});
   } else writeable = process.stdout;
 
   return writeable;
