@@ -3,9 +3,12 @@ const { handleError } = require('./handle-errors');
 
 // Handle ciphering config=====================================================
 const validateCipher = (config) => {
-  const configArr = config.split('-');
+  let configArr;
 
   try {
+    if (!config) throw new ValidationError('ERR_NO_CFG');
+
+    configArr = config.split('-');
     configArr.forEach((el) => {
       if (!/^(C[01]|R[01]|A)$/.test(el))
         throw new ValidationError('ERR_NO_CFG');
@@ -33,41 +36,35 @@ const validateFile = (file, fileType) => {
 
 // Handle arguments and generate output config=================================
 const getConfig = (args) => {
-  const wrongIdx = [];
-  const configIdx = [];
-  const inputIdx = [];
-  const outputIdx = [];
+  const regex = [/^-c$|^--config$/, /^-i$|^--input$/, /^-o$|^--output$/];
+  const wrgIdx = [];
+  const cnfIdx = [];
+  const inpIdx = [];
+  const outIdx = [];
 
   try {
     // Parse arguments
     args.forEach((el, i) => {
-      if (/^-(-)?([a-z]){1,}/.test(el)) {
-        if (/^-c|--config$/.test(el)) configIdx.push(i);
-        else if (/^-i|--input$/.test(el)) inputIdx.push(i);
-        else if (/^-o|--output$/.test(el)) outputIdx.push(i);
-        else wrongIdx.push(i);
-      }
+      if (regex[0].test(el)) cnfIdx.push(i);
+      else if (regex[1].test(el)) inpIdx.push(i);
+      else if (regex[2].test(el)) outIdx.push(i);
+      else if (!regex.some((regx) => regx.test(args[i - 1]))) wrgIdx.push(i);
     });
 
     // Check for mandatory opts, duplication and wrong arguments
-    if (wrongIdx[0]) throw new ValidationError('ERR_WRG_OPTS');
-    if (configIdx[1]) throw new ValidationError('ERR_NO_CFG_OPT');
-    if (configIdx[1] || inputIdx[1] || outputIdx[1])
+    if (wrgIdx.length > 0) throw new ValidationError('ERR_WRG_ARGS');
+    if (cnfIdx.length < 1) throw new ValidationError('ERR_NO_CFG_OPT');
+    if (cnfIdx.length > 1 || inpIdx.length > 1 || outIdx.length > 1)
       throw new ValidationError('ERR_DUP_OPTS');
-    if (
-      args.length > 6 ||
-      (!inputIdx[0] && !outputIdx[0] && args.length > 2) ||
-      ((!inputIdx[0] || !outputIdx[0]) && args.length > 4)
-    )
-      throw new ValidationError('ERR_WRG_OPTS');
   } catch (error) {
     handleError(error);
   }
+
   // Build config
   const config = {
-    cipher: validateCipher(args[configIdx[0] + 1]),
-    input: inputIdx[0] ? validateFile(args[inputIdx[0] + 1], 1) : null,
-    output: outputIdx[0] ? validateFile(args[outputIdx[0] + 1], 0) : null,
+    cipher: validateCipher(args[cnfIdx[0] + 1]),
+    input: inpIdx.length > 0 ? validateFile(args[inpIdx[0] + 1], 1) : null,
+    output: outIdx.length > 0 ? validateFile(args[outIdx[0] + 1], 0) : null,
   };
 
   return config;
