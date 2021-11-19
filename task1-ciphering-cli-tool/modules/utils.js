@@ -29,7 +29,21 @@ const checkFileRead = (path) => {
   }
 };
 
+// Check file read access
+const checkFileWrite = (path) => {
+  try {
+    try {
+      fs.accessSync(path, fs.constants.W_OK);
+    } catch {
+      throw new FileError('ERR_OUT_FILE_WRITE');
+    }
+  } catch (error) {
+    handleError(error);
+  }
+};
+
 module.exports = {
   checkFileExist,
   checkFileRead,
+  checkFileWrite,
 };
