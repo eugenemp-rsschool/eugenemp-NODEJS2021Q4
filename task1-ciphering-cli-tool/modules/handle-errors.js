@@ -3,10 +3,10 @@ const { FileError } = require('./error-file');
 const { ValidationError } = require('./error-validation');
 
 const errMsgs = {
-  ERR_NO_CFG_OPT: `Ciphering configuration is mandatory but was not provided!`,
+  ERR_NO_CFG_OPT: `Ciphering config argument is mandatory but was not provided!`,
   ERR_NO_CFG: `Ciphering configuration is missing or ivalid!`,
-  ERR_WRG_OPTS: 'Wrong options provided!',
-  ERR_DUP_OPTS: `Duplicated options were provided!`,
+  ERR_WRG_ARGS: 'Wrong arguments were passed!',
+  ERR_DUP_OPTS: `Duplicated options were passed!`,
   ERR_INP_PATH: `Path to input file is missing or its syntax is wrong.`,
   ERR_OUT_PATH: `Path to output file is missing or its syntax is wrong.`,
   ERR_INP_FILE_NOT_EXIST: 'Specified input file does not exist!',
