@@ -16,3 +16,17 @@ const validateCipher = (config) => {
 
   return configArr;
 };
+
+// Validate file arg===========================================================
+const validateFile = (file, fileType) => {
+  try {
+    if (!/^(.+)\/([^/]+)$/.test(file)) {
+      if (fileType) throw new ValidationError('ERR_INP_PATH');
+      else throw new ValidationError('ERR_OUT_PATH');
+    }
+  } catch (error) {
+    handleError(error);
+  }
+
+  return file;
+};
