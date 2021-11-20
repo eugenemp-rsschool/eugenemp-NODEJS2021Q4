@@ -1,6 +1,9 @@
 const { ValidationError } = require('./error-validation');
 const { handleError } = require('./handle-errors');
 
+// Input params patterns
+const regex = [/^-c$|^--config$/, /^-i$|^--input$/, /^-o$|^--output$/];
+
 // Handle ciphering config=====================================================
 const validateCipher = (config) => {
   let configArr;
@@ -22,21 +25,27 @@ const validateCipher = (config) => {
 
 // Validate file arg===========================================================
 const validateFile = (file, fileType) => {
+  let outFile = file;
+  
   try {
     if (!/^(.+)\/([^/]+)$/.test(file)) {
-      if (fileType) throw new ValidationError('ERR_INP_PATH');
-      else throw new ValidationError('ERR_OUT_PATH');
+      if (!file || regex.some((regx) => regx.test(file)) || file === './') {
+        if (fileType) throw new ValidationError('ERR_INP_PATH');
+        else throw new ValidationError('ERR_OUT_PATH');
+
+      } else outFile = `./${file}`;
+
     }
   } catch (error) {
     handleError(error);
   }
 
-  return file;
+  return outFile;
+  
 };
 
 // Handle arguments and generate output config=================================
 const getConfig = (args) => {
-  const regex = [/^-c$|^--config$/, /^-i$|^--input$/, /^-o$|^--output$/];
   const wrgIdx = [];
   const cnfIdx = [];
   const inpIdx = [];
