@@ -71,5 +71,7 @@ const getConfig = (args) => {
 };
 
 module.exports = {
+  validateCipher,
+  validateFile,
   getConfig,
 };
