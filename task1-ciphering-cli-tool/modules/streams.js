@@ -5,15 +5,9 @@ const { checkFileExist, checkFileRead, checkFileWrite } = require('./utils');
 
 // Generate readable stream
 const getReadable = (file) => {
-  let readable;
+  if (file) return fs.createReadStream(file, 'utf8');
 
-  if (file) {
-    checkFileExist(file, 1);
-    checkFileRead(file);
-
-    readable = fs.createReadStream(file);
-  } else readable = process.stdin;
-
+  const readable = process.stdin;
   readable.setEncoding('utf8');
 
   return readable;
@@ -21,16 +15,9 @@ const getReadable = (file) => {
 
 // Generate writeable stream
 const getWriteable = (file) => {
-  let writeable;
+  if (file) return fs.createWriteStream(file, { flags: 'a' });
 
-  if (file) {
-    checkFileExist(file, 0);
-    checkFileWrite(file);
-
-    writeable = fs.createWriteStream(file, {flags:'a'});
-  } else writeable = process.stdout;
-
-  return writeable;
+  return process.stdout;
 };
 
 // Transform stream
@@ -43,7 +30,7 @@ const getTransform = (ciphrType) => {
   if (ciphrType === 'R0') cipher = caesar('R', 0);
   if (ciphrType === 'R1') cipher = caesar('R', 1);
 
-  const transform = new Transform({
+  return new Transform({
     transform(chunk, encoding, callback) {
       try {
         callback(null, cipher(chunk));
@@ -54,8 +41,6 @@ const getTransform = (ciphrType) => {
     decodeStrings: false,
     encoding: 'utf8',
   });
-
-  return transform;
 };
 
 module.exports = {
