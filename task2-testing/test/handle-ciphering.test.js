@@ -35,7 +35,7 @@ describe('Ciphering functions tests', () => {
 
     test('Caesar decode - should encode latin letters', () => {
       const decode = caesar('C', 0);
-      expect(decode('bcdeBCDE')).toEqual('abcdABCD');
+      expect(decode('abcdABCD')).toEqual('zabcZABC');
     });
 
     test('ROT-8 encode - should encode latin letters', () => {
@@ -55,7 +55,7 @@ describe('Ciphering functions tests', () => {
 
     test('ROT-8 decode - should encode latin letters', () => {
       const decode = caesar('R', 0);
-      expect(decode('ijklIJKL')).toEqual('abcdABCD');
+      expect(decode('abcdABCD')).toEqual('stuvSTUV');
     });
   });
 });
