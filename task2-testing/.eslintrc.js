@@ -3,6 +3,7 @@ module.exports = {
     browser: true,
     commonjs: true,
     es2021: true,
+    'jest/globals': true,
   },
   extends: [
     'eslint:recommended',
@@ -13,6 +14,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 13,
   },
-  plugins: ['prettier'],
+  plugins: ['prettier', 'jest'],
   rules: { 'no-shadow': 'off' },
+  ignorePatterns: ['**/*.test.js'],
 };
