@@ -10,7 +10,13 @@ const {
 
 // Handle input arguments and get config if it validates successfully
 const args = process.argv.slice(2);
-const config = getConfig(args);
+let config;
+
+try {
+  config = getConfig(args);
+} catch(error) {
+  handleError(error);
+}
 
 // Get read and write streams
 const readable = getReadable(config.input);
