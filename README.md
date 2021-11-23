@@ -1,3 +1,12 @@
+# Installation
+- clone repo by entering in you commandline:  
+`git clone -b task2-testing https://github.com/eugenemp/eugenemp-NODEJS2021Q4.git`  
+Notice the b flag - specified branch will be cloned so no need to switch it later  
+
+- cd to task2-testing folder  
+- run `npm run test` to run tests  
+- run `npm run coverage` to see code coverage  
+
 # Testing
 
 Tests for Ciphering machine CLI from 1st task.  
