@@ -1,0 +1,33 @@
+{
+  "name": "task2-testing",
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=14.8.1"
+  },
+  "description": "RS-School NodeJS Task 2",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --verbose",
+    "coverage": "jest --coverage"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eugenemp/eugenemp-NODEJS2021Q4/tree/task2-testing"
+  },
+  "keywords": [
+    "Node"
+  ],
+  "author": "eugenemp",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.2.0",
+    "eslint-config-airbnb": "^19.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.25.3",
+    "eslint-plugin-jest": "^25.2.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^27.3.1",
+    "prettier": "^2.4.1"
+  }
+}
