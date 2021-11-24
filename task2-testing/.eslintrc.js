@@ -15,6 +15,10 @@ module.exports = {
     ecmaVersion: 13,
   },
   plugins: ['prettier', 'jest'],
-  rules: { 'no-shadow': 'off' },
-  ignorePatterns: ['**/*.test.js'],
+  rules: {
+    'no-shadow': 'off',
+    'import/no-extraneous-dependencies': 'off',
+    'node/no-extraneous-require': 'off',
+    'no-underscore-dangle': 'off',
+  },
 };
