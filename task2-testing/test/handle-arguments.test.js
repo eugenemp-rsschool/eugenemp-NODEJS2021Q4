@@ -1,4 +1,5 @@
 const { expect } = require('@jest/globals');
+const { Readable, Writable, pipeline } = require('stream');
 const { FileError } = require('../modules/error-file');
 const { ValidationError } = require('../modules/error-validation');
 const {
@@ -6,6 +7,8 @@ const {
   validateFile,
   getConfig,
 } = require('../modules/handle-arguments');
+const { handleError } = require('../modules/handle-errors');
+const { getTransform } = require('../modules/streams');
 
 describe('Input arguments validation tests', () => {
   describe('Config pattern validation tests', () => {
@@ -39,59 +42,198 @@ describe('Input arguments validation tests', () => {
     });
   });
 
-  describe('General input parameters test', () => {
-    test('Should return valid config object if passed arguments were correct: -c "C1-R1-A" -i "./input.txt" -o "./output.txt"', () => {
-      const config = getConfig([
-        '-c',
-        'C1-R1-A',
-        '-i',
-        './input.txt',
-        '-o',
-        './output.txt',
-      ]);
+  describe('Error scenarios', () => {
+    const mockFns = {
+      mockExit: jest.spyOn(process, 'exit').mockImplementation(() => {}),
+      mockStderr: jest
+        .spyOn(process.stderr, 'write')
+        .mockImplementation(() => {}),
+    };
 
-      expect(config).toStrictEqual({
-        cipher: ['C1', 'R1', 'A'],
-        input: './input.txt',
-        output: './output.txt',
-      });
-    });
-
-    test('Should return valid config object if passed arguments were correct: -c "C1-R1-A"', () => {
-      const config = getConfig(['-c', 'C1-R1-A']);
-
-      expect(config).toStrictEqual({
-        cipher: ['C1', 'R1', 'A'],
-        input: null,
-        output: null,
-      });
+    afterEach(() => {
+      jest.clearAllMocks();
     });
 
     test('Should show error message if config argument was duplicated: -c "C1-C1-A-R0" -c "C0"', () => {
-      expect(() => getConfig(['-c', 'C1-C1-A-R0', '-c', 'C0'])).toThrow(
-        'ERR_DUP_OPTS'
+      try {
+        getConfig(['-c', 'C1-C1-A-R0', '-c', 'C0']);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'ValidationError: Duplicated options were passed!'
+      );
+    });
+
+    test('Should show error message if mandatory -c flag was not passed:', () => {
+      try {
+        getConfig([]);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'ValidationError: Ciphering config argument is mandatory but was not provided!'
+      );
+    });
+
+    test('Should show error message if input file path was incorrect -i "./":', () => {
+      try {
+        getConfig(['-c', 'A', '-i', './']);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'FileError: Path to input file is missing or its syntax is wrong.'
+      );
+    });
+
+    test('Should show error message if output file path was incorrect: -o "./"', () => {
+      try {
+        getConfig(['-c', 'A', '-o', './']);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'FileError: Path to output file is missing or its syntax is wrong.'
+      );
+    });
+
+    test('Should show error message if input file does not exist: -i "./notexist.null":', () => {
+      try {
+        getConfig(['-c', 'A', '-i', './notexist.null']);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'FileError: Specified input file does not exist!'
+      );
+    });
+
+    test('Should show error message if output file does not exist: -o "./notexist.null":', () => {
+      try {
+        getConfig(['-c', 'A', '-o', './notexist.null']);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'FileError: Specified output file does not exist!'
       );
     });
 
     test('Should show error message if ciphering pattern was incorrect: -c "G1-R1-D"', () => {
-      expect(() => getConfig(['-c', 'G1-R1-D'])).toThrow('ERR_NO_CFG');
-    });
+      try {
+        getConfig(['-c', 'G1-R1-D']);
+      } catch (err) {
+        handleError(err);
+      }
 
-    test('Should show error message if mandatory -c flag was not passed:', () => {
-      expect(() => getConfig(['-c', 'G1-R1-D'])).toThrow('ERR_NO_CFG');
-    });
-
-    test('Should show error message if input/output file path was incorrect:', () => {
-      expect(() => getConfig(['-c', 'A', '-i', './'])).toThrow('ERR_INP_PATH');
-      expect(() => getConfig(['-c', 'A', '-o', './'])).toThrow('ERR_OUT_PATH');
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'ValidationError: Ciphering configuration is missing or ivalid!'
+      );
     });
 
     test('Should show error message if input contains wrong arguments:', () => {
-      expect(() => getConfig(['-a', '-b'])).toThrow('ERR_WRG_ARGS');
+      try {
+        getConfig(['-a', '-b']);
+      } catch (err) {
+        handleError(err);
+      }
+
+      expect(mockFns.mockStderr).toHaveBeenCalledWith(
+        'ValidationError: Wrong arguments were passed!'
+      );
+    });
+  });
+
+  describe('Success scenarios', () => {
+    const mockWrite = jest.fn((chunk) => chunk.toString());
+    const streams = {
+      mockReadable: new Readable({ read() {} }),
+      mockWriteable: new Writable({write: mockWrite}),
+    };
+
+    streams.mockWriteable.write = mockWrite;
+
+    test('Should return correct encoded phrase: -c "C1-R1-A"', () => {
+      const config = getConfig(['-c', 'C1-C1-R0-A']);
+
+      pipeline(
+        streams.mockReadable,
+        ...config.cipher.map(getTransform),
+        streams.mockWriteable,
+        () => {}
+      );
+      streams.mockReadable.emit(
+        'data',
+        'This is secret. Message about "_" symbol!'
+      );
+
+      expect(mockWrite).toHaveReturnedWith(
+        'Myxn xn nbdobm. Tbnnfzb ferlm "_" nhteru!'
+      );
     });
 
-    test('Should show error message if no arguments were passed:', () => {
-      expect(() => getConfig([])).toThrow('ERR_NO_CFG_OPT');
+    test('Should return correct encoded phrase: -c "C1-C0-A-R1-R0-A-R0-R0-C1-A"', () => {
+      const config = getConfig(['-c', 'C1-C0-A-R1-R0-A-R0-R0-C1-A']);
+
+      pipeline(
+        streams.mockReadable,
+        ...config.cipher.map(getTransform),
+        streams.mockWriteable,
+        () => {}
+      );
+      streams.mockReadable.emit(
+        'data',
+        'This is secret. Message about "_" symbol!'
+      );
+
+      expect(mockWrite).toHaveReturnedWith(
+        'Vhgw gw wkmxkv. Ckwwoik onauv "_" wqcnad!'
+      );
+    });
+
+    test('Should return correct encoded phrase: -c "A-A-A-R1-R0-R0-R0-C1-C1-A"', () => {
+      const config = getConfig(['-c', 'A-A-A-R1-R0-R0-R0-C1-C1-A']);
+
+      pipeline(
+        streams.mockReadable,
+        ...config.cipher.map(getTransform),
+        streams.mockWriteable,
+        () => {}
+      );
+      streams.mockReadable.emit(
+        'data',
+        'This is secret. Message about "_" symbol!'
+      );
+
+      expect(mockWrite).toHaveReturnedWith(
+        'Hvwg wg gsqfsh. Asggous opcih "_" gmapcz!'
+      );
+    });
+
+    test('Should return correct encoded phrase: -c "C1-R1-C0-C0-A-R0-R1-R1-A-C1"', () => {
+      const config = getConfig(['-c', 'C1-R1-C0-C0-A-R0-R1-R1-A-C1']);
+
+      pipeline(
+        streams.mockReadable,
+        ...config.cipher.map(getTransform),
+        streams.mockWriteable,
+        () => {}
+      );
+      streams.mockReadable.emit(
+        'data',
+        'This is secret. Message about "_" symbol!'
+      );
+
+      expect(mockWrite).toHaveReturnedWith(
+        'This is secret. Message about "_" symbol!'
+      );
     });
   });
 });
